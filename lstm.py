@@ -1,3 +1,5 @@
+import matplotlib.pyplot as plt
+
 from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import train_test_split
 import numpy as np
@@ -6,6 +8,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn import metrics
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 from nltk import word_tokenize          
 from nltk.stem import WordNetLemmatizer 
 
@@ -87,7 +90,7 @@ def main():
     checkpoint = ModelCheckpoint(file_path, monitor = 'val_loss', verbose = 1, save_best_only=True)
     early_stop = EarlyStopping(monitor = 'val_loss', patience = 1)
 
-    model.fit(comment_train2, labels_train, batch_size = 32, epochs = 5, validation_split = 0.2, validation_data = (comment_test2, labels_test), callbacks = [checkpoint, early_stop])
+    model.fit(comment_train2, labels_train, batch_size = 512, epochs = 1, validation_split = 0.2, validation_data = (comment_test2, labels_test), callbacks = [checkpoint, early_stop])
 
     prediction = (model.predict(comment_test2).ravel()>0.5)+0 
 
@@ -95,7 +98,15 @@ def main():
     print("\n")
     print("Accuracy:", np.mean(prediction == labels_test), "\n")
     print("Precision, Recall, and F1 Score:\n", metrics.classification_report(labels_test, prediction), "\n")
-    print("Confusion Matrix:\n", metrics.confusion_matrix(labels_test, prediction), "\n")
+    cm = confusion_matrix(labels_test, prediction)
+    print("Confusion Matrix:\n", cm, "\n")
+
+    cmd = ConfusionMatrixDisplay(cm, display_labels=["non_toxic", "toxic"])
+    cmd.plot()
+    plt.show()
+
+    # plt.savefig("CM_LSTM.png")
+
 
 
 if __name__ == '__main__':
