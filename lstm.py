@@ -9,35 +9,67 @@ from sklearn import metrics
 from nltk import word_tokenize          
 from nltk.stem import WordNetLemmatizer 
 
+
+from keras.callbacks import Callback
 from keras.models import Model
 from keras.layers import Dense, Embedding, Input, LSTM, Bidirectional, GlobalMaxPool1D, Dropout
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing import sequence
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 
+#from scikit-learn website
+class LemmaTokenizer(object):
+    def __init__(self):
+        self.wnl = WordNetLemmatizer()
+    def __call__(self, articles):
+        return [self.wnl.lemmatize(t) for t in word_tokenize(articles)]
+
 def main():
 
     #1. Group by toxic for the training data
     train_data = pd.read_csv("jigsaw-toxic-comment-classification-challenge/train.csv")
-    test_data = pd.read_csv("jigsaw-toxic-comment-classification-challenge/test.csv")
-    submission = pd.read_csv("jigsaw-toxic-comment-classification-challenge/sample_submission.csv")
+    train = train_data[["comment_text"]]
+    # print(train.shape)
+    train_labels = train_data[["toxic"]]
+    # print(train_labels.shape)
+    
 
-    X = train_data.comment_text
-    y = train_data[["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]].values
-    test = test_data.comment_text
+    #2. Use train_test_split to split into train/test
+    comment_train, comment_test, labels_train, labels_test = train_test_split(train, train_labels, test_size = 0.2, random_state=42)
+    #Transpose and flatten so it fits the correct dimensions
+    labels_train = np.transpose(labels_train)
+    labels_train = np.ravel(labels_train)
+    labels_test = np.transpose(labels_test)
+    labels_test = np.ravel(labels_test)
+
+    # #3. CountVectorizer
+    # #Create a count matrix for each comment
+    # count_vect = CountVectorizer(tokenizer = LemmaTokenizer(),
+    #                             strip_accents = 'unicode', # works 
+    #                             lowercase = True)
+    # comment_train_counts = count_vect.fit_transform(comment_train.comment_text)
+
+    # #4. TfidfTransformer
+    # #Use tf-idf instead
+    # tf_transformer = TfidfTransformer(use_idf=False).fit(comment_train_counts)
+    # comment_train_tf = tf_transformer.transform(comment_train_counts)
+    # tfidf_transformer = TfidfTransformer()
+    # comment_train_tfidf = tfidf_transformer.fit_transform(comment_train_counts)
+
 
     num_words = 20000
     max_len = 150
     emb_size = 128
 
     tok = Tokenizer(num_words = num_words)
-    tok.fit_on_texts(list(X))
+    tok.fit_on_texts(list(comment_train.comment_text))
 
-    X = tok.texts_to_sequences(X)
-    test = tok.texts_to_sequences(test)
+    comment_train2 = tok.texts_to_sequences(comment_train.comment_text)
+    comment_test2 = tok.texts_to_sequences(comment_test.comment_text)
 
-    X = sequence.pad_sequences(X, maxlen = max_len)
-    X_test = sequence.pad_sequences(test, maxlen = max_len)
+    comment_train2 = sequence.pad_sequences(comment_train2, maxlen = max_len)
+    comment_test2 = sequence.pad_sequences(comment_test2, maxlen = max_len)
+
 
     inp = Input(shape = (max_len, ))
     layer = Embedding(num_words, emb_size)(inp)
@@ -46,7 +78,7 @@ def main():
     layer = Dropout(0.2)(layer)
     layer = Dense(50, activation = 'relu')(layer)
     layer = Dropout(0.2)(layer)
-    layer = Dense(6, activation = 'sigmoid')(layer)
+    layer = Dense(1, activation = 'sigmoid')(layer)
     model = Model(inputs = inp, outputs = layer)
     model.compile(loss = 'binary_crossentropy', optimizer = 'adam', metrics=['accuracy'])
     model.summary()
@@ -55,28 +87,15 @@ def main():
     checkpoint = ModelCheckpoint(file_path, monitor = 'val_loss', verbose = 1, save_best_only=True)
     early_stop = EarlyStopping(monitor = 'val_loss', patience = 1)
 
-    hist = model.fit(X, y, batch_size = 32, epochs = 2, validation_split = 0.2, callbacks = [checkpoint, early_stop])
-    # try increasing epoch (more training time, but might overfit)
+    model.fit(comment_train2, labels_train, batch_size = 32, epochs = 5, validation_split = 0.2, validation_data = (comment_test2, labels_test), callbacks = [checkpoint, early_stop])
 
-    
+    prediction = (model.predict(comment_test2).ravel()>0.5)+0 
 
-   
-
-    # y_test = model.predict(X_test)
-
-
-    # print(y_test)
-    # print(" ")
-
-    # submission[["toxic", "severe_toxic", "obscene", "threat", "insult", "identity_hate"]] = y_test
-
-    # print(submission)
-    # submission.to_csv("sub.csv", index=False)
-
-
-
-    # print('Test score:', score)
-    # print('Test accuracy:', acc)
+    target_names = ['non-toxic', 'toxic']
+    print("\n")
+    print("Accuracy:", np.mean(prediction == labels_test), "\n")
+    print("Precision, Recall, and F1 Score:\n", metrics.classification_report(labels_test, prediction), "\n")
+    print("Confusion Matrix:\n", metrics.confusion_matrix(labels_test, prediction), "\n")
 
 
 if __name__ == '__main__':
