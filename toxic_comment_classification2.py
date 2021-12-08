@@ -108,7 +108,7 @@ def main():
     tok.fit_on_texts(list(comment_train.comment_text.astype(str)))
 
     comment_train2 = tok.texts_to_sequences(comment_train.comment_text.astype(str))
-    comment_test2 = tok.texts_to_sequences(comment_train.comment_text.astype(str))
+    comment_test2 = tok.texts_to_sequences(comment_test.comment_text.astype(str))
 
     comment_train2 = sequence.pad_sequences(comment_train2, maxlen = max_len)
     comment_test2 = sequence.pad_sequences(comment_test2, maxlen = max_len)
