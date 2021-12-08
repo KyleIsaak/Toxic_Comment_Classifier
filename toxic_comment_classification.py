@@ -33,7 +33,7 @@ def main():
     #1. Group by toxic for the training data
     train_data = pd.read_csv("jigsaw-toxic-comment-classification-challenge/train.csv")
     train = train_data[["comment_text"]]
-    # print(train.shape)
+    #print(train.shape)
     train_labels = train_data[["toxic"]]
     # print(train_labels.shape)
 
@@ -45,6 +45,8 @@ def main():
     labels_test = np.transpose(labels_test)
     labels_test = np.ravel(labels_test)
 
+    print(comment_train)
+    print(comment_train.comment_text)
 
     #3. CountVectorizer
     #Create a count matrix for each comment

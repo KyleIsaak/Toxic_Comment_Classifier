@@ -61,7 +61,7 @@ def main():
     # print(train.shape)
     train_labels = train_data[["toxic"]]
     # print(train_labels.shape)
-
+    print(train)
     #2. Use train_test_split to split into train/test
     comment_train, comment_test, labels_train, labels_test = train_test_split(train, train_labels, test_size = 0.2, random_state=42)
     #Transpose and flatten so it fits the correct dimensions
@@ -69,12 +69,15 @@ def main():
     labels_train = np.ravel(labels_train)
     labels_test = np.transpose(labels_test)
     labels_test = np.ravel(labels_test)
+    #comment_train_converted = comment_train.comment_text.astype(str)
+    #comment_test_converted = comment_test.comment_text.astype(str)
 
-
+    #print(comment_train_converted)
+    #print(comment_train.comment_text)
     #3. CountVectorizer
     #Create a count matrix for each comment
     count_vect = CountVectorizer()
-    comment_train_counts = count_vect.fit_transform(comment_train.comment_text)
+    comment_train_counts = count_vect.fit_transform(comment_train.comment_text.astype(str))
 
     #4. TfidfTransformer
     #Use tf-idf instead
@@ -90,7 +93,7 @@ def main():
     clf = MultinomialNB().fit(comment_train_tfidf, labels_train)
 
     #make the bag of words for the test data
-    comment_test_new_counts = count_vect.transform(comment_test.comment_text)
+    comment_test_new_counts = count_vect.transform(comment_test.comment_text.astype(str))
     comment_test_new_tfidf = tfidf_transformer.transform(comment_test_new_counts)
 
 
@@ -102,10 +105,10 @@ def main():
     # vectorize a text corpus, by turning each text into either a sequence of integers (each integer being the index of a token in a dictionary) 
     # or into a vector where the coefficient for each token could be binary, based on word count, based on tf-idf
     tok = Tokenizer(num_words = num_words, lower=True, filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n')
-    tok.fit_on_texts(list(comment_train.comment_text))
+    tok.fit_on_texts(list(comment_train.comment_text.astype(str)))
 
-    comment_train2 = tok.texts_to_sequences(comment_train.comment_text)
-    comment_test2 = tok.texts_to_sequences(comment_test.comment_text)
+    comment_train2 = tok.texts_to_sequences(comment_train.comment_text.astype(str))
+    comment_test2 = tok.texts_to_sequences(comment_train.comment_text.astype(str))
 
     comment_train2 = sequence.pad_sequences(comment_train2, maxlen = max_len)
     comment_test2 = sequence.pad_sequences(comment_test2, maxlen = max_len)
