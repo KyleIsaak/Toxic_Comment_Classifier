@@ -1,0 +1,30 @@
+NB Accuracy:
+0.918972270092433
+NB Precision, Recall, and F1 Score:
+              precision    recall  f1-score   support
+
+           0       0.92      1.00      0.96     28859
+           1       0.99      0.16      0.27      3056
+
+    accuracy                           0.92     31915
+   macro avg       0.95      0.58      0.61     31915
+weighted avg       0.92      0.92      0.89     31915
+
+NB Confusion Matrix:
+[[28855     4]
+ [ 2582   474]]
+LSTM Accuracy:
+0.9610214632617892
+LSTM Precision, Recall, and F1 Score:
+              precision    recall  f1-score   support
+
+           0       0.97      0.98      0.98     28859
+           1       0.82      0.76      0.79      3056
+
+    accuracy                           0.96     31915
+   macro avg       0.90      0.87      0.88     31915
+weighted avg       0.96      0.96      0.96     31915
+
+LSTM Confusion Matrix:
+[[28363   496]
+ [  748  2308]]
